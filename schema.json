@@ -1,0 +1,395 @@
+{
+    "task_schema": {
+        "A1.": {
+            "name": "A1_task",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "python_script": {
+                        "type": "string",
+                        "description": "The Python script code as a string."
+                    },
+                    "user_email": {
+                        "type": "string",
+                        "description": "The email address of the user."
+                    }
+                },
+                "required": [
+                    "python_script",
+                    "user_email"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A2.": {
+            "name": "A2_task",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_file": {
+                        "type": "string",
+                        "description": "The file that contains input data for the task."
+                    },
+                    "is_inplace_format": {
+                        "type": "boolean",
+                        "description": "Indicates whether the format is inplace or not."
+                    },
+                    "format_tool": {
+                        "type": "string",
+                        "description": "The tool used for formatting the input file."
+                    }
+                },
+                "required": [
+                    "input_file",
+                    "is_inplace_format",
+                    "format_tool"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A3.": {
+            "name": "A3_task",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_file": {
+                        "type": "string",
+                        "description": "The path to the input file."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The path to the output file."
+                    },
+                    "day_of_week": {
+                        "type": "string",
+                        "description": "The day of the week when the task is scheduled.",
+                        "enum": [
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                            "Sunday"
+                        ]
+                    }
+                },
+                "required": [
+                    "input_file",
+                    "output_file",
+                    "day_of_week"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A4.": {
+            "name": "A4_task",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_file": {
+                        "type": "string",
+                        "description": "The path to the input file."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The path to the output file."
+                    },
+                    "sorting_params_in_order_array": {
+                        "type": "array",
+                        "description": "An array of sorting parameters in order.",
+                        "items": {
+                            "type": "string",
+                            "description": "A single sorting parameter."
+                        }
+                    }
+                },
+                "required": [
+                    "input_file",
+                    "output_file",
+                    "sorting_params_in_order_array"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A5.": {
+            "name": "A5_task",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "which_line_number": {
+                        "type": "number",
+                        "description": "The specific line number to process. eg 1 for first line and -1 for last line. 2 for second line and -2 for second last line."
+                    },
+                    "how_many_files": {
+                        "type": "number",
+                        "description": "The total number of files to consider."
+                    },
+                    "file_extension": {
+                        "type": "string",
+                        "description": "The file extension to filter the files. eg .log if all .log files are to be considered."
+                    },
+                    "file_folder": {
+                        "type": "string",
+                        "description": "The folder path where the files are located."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The name of the output file to save results."
+                    }
+                },
+                "required": [
+                    "which_line_number",
+                    "how_many_files",
+                    "file_extension",
+                    "file_folder",
+                    "output_file"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A6.": {
+            "name": "task_6",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_folder": {
+                        "type": "string",
+                        "description": "The path to the input folder containing the files."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The name of the output file to be generated."
+                    },
+                    "file_type": {
+                        "type": "string",
+                        "description": "The type of the files to be processed, e.g., 'txt', 'csv', etc."
+                    }
+                },
+                "required": [
+                    "input_folder",
+                    "output_file",
+                    "file_type"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A7.": {
+            "name": "task_7",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_file": {
+                        "type": "string",
+                        "description": "The input file associated with the task."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The output file generated by the task."
+                    },
+                    "is_sender": {
+                        "type": "boolean",
+                        "description": "Indicates whether the task is associated with the sender."
+                    },
+                    "is_receiver": {
+                        "type": "boolean",
+                        "description": "Indicates whether the task is associated with the receiver."
+                    },
+                    "is_cc": {
+                        "type": "boolean",
+                        "description": "Indicates whether the task is associated with CC (carbon copy)."
+                    },
+                    "is_bcc": {
+                        "type": "boolean",
+                        "description": "Indicates whether the task is associated with BCC (blind carbon copy)."
+                    },
+                    "is_to": {
+                        "type": "boolean",
+                        "description": "Indicates whether the task is associated with the 'To' field."
+                    }
+                },
+                "required": [
+                    "input_file",
+                    "output_file",
+                    "is_sender",
+                    "is_receiver",
+                    "is_cc",
+                    "is_bcc",
+                    "is_to"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A8.": {
+            "name": "task8",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_image_path": {
+                        "type": "string",
+                        "description": "The path to the input image file."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The path to the output file where results are stored."
+                    },
+                    "extract_number": {
+                        "type": "boolean",
+                        "description": "Indicates whether to extract numbers from the image."
+                    },
+                    "extract_name": {
+                        "type": "boolean",
+                        "description": "Indicates whether to extract names from the image."
+                    },
+                    "extract_validity": {
+                        "type": "boolean",
+                        "description": "Indicates whether to check the validity of the extracted data."
+                    }
+                },
+                "required": [
+                    "input_image_path",
+                    "output_file",
+                    "extract_number",
+                    "extract_name",
+                    "extract_validity"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A9.": {
+            "name": "task_9",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "input_file": {
+                        "type": "string",
+                        "description": "The path to the input file."
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The path to the output file."
+                    }
+                },
+                "required": [
+                    "input_file",
+                    "output_file"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "A10.": {
+            "name": "task10",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "sql_type": {
+                        "type": "string",
+                        "description": "The type of SQL operation to perform"
+                    },
+                    "sql_query": {
+                        "type": "string",
+                        "description": "The SQL query to be executed"
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "Path to the file where the output will be saved"
+                    },
+                    "db_file": {
+                        "type": "string",
+                        "description": "Path to the database file that the query will interact with"
+                    }
+                },
+                "required": [
+                    "sql_type",
+                    "sql_query",
+                    "output_file",
+                    "db_file"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "B3.": {
+            "name": "taskB3",
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "curl_request": {
+                        "type": "object",
+                        "description": "The cURL request configuration.",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "The URL to send the cURL request to."
+                            },
+                            "method": {
+                                "type": "string",
+                                "description": "The HTTP method to use (GET, POST, etc.)."
+                            },
+                            "headers": {
+                                "type": "array",
+                                "description": "An array of headers to include in the request.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string",
+                                            "description": "The name of the header."
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "description": "The value of the header."
+                                        }
+                                    },
+                                    "required": [
+                                        "key",
+                                        "value"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "data": {
+                                "type": "string",
+                                "description": "The data to send with the request."
+                            }
+                        },
+                        "required": [
+                            "url",
+                            "method",
+                            "headers",
+                            "data"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "output_file": {
+                        "type": "string",
+                        "description": "The path to the output file where the response will be saved."
+                    }
+                },
+                "required": [
+                    "curl_request",
+                    "output_file"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        },
+        "B4.": {},
+        "B5.": {},
+        "B6.": {},
+        "B7.": {},
+        "B8.": {},
+        "B9.": {},
+        "B10.": {},
+        "A0.": {}
+    }
+}
