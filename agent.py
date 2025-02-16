@@ -53,7 +53,8 @@ def execute_task(task: str) -> str:
             params = call_llm(task, schema["task_schema"]["A10."])
             return execute_sql(params)
         case _:
-            raise ValueError("Unsupported task description.")
+            execute_generic_python_script(python_response)
+            return "Generic Python script executed successfully."
 
 def install_uv_and_run_script(params: json) -> str:
     logger.info("Installing uv and running script." + str(params))
@@ -80,8 +81,8 @@ def format_markdown(params: json) -> str:
     logger.info("Formatting Markdown file." + str(params))
     input_file = params["input_file"]
     format_tool = params["format_tool"]
-    subprocess.run(["npx", "install", "-g", format_tool], check=True)
-    subprocess.run([format_tool, "--write", input_file], check=True)
+    subprocess.run(["npm", "install", "-g", format_tool], check=True)  # Correct command to install the tool
+    subprocess.run(["npx", format_tool, "--write", input_file], check=True)
     return "Formatted Markdown file successfully."
 
 def count_days(params: json) -> str:
@@ -177,3 +178,19 @@ def extract_argument(task: str) -> str:
     """Extracts the user email argument from the task description using LLM."""
     email = call_llm("Extract the email from this text:", task)
     return email.strip()
+
+def execute_generic_python_script(task: str) -> str:
+    """Executes a generic Python script with the given task as an argument."""
+    logger.info("Executing generic Python script.")
+    script = call_llm("Generate a Python script for this task:", task)
+    script_file = "generated_script.py"
+    write_file(script_file, script)
+    
+    try:
+        subprocess.run(["python", script_file], check=True)
+        logger.info("Generic Python script executed successfully.")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"An error occurred while executing the generic Python script: {e}")
+        raise e
+    
+    return "Generic Python script executed successfully."

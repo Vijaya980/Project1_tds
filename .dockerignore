@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+.venv
+model_cache
+show
+use
+.env
