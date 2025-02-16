@@ -5,9 +5,9 @@
             "schema": {
                 "type": "object",
                 "properties": {
-                    "python_script": {
+                    "python_script_url": {
                         "type": "string",
-                        "description": "The Python script code as a string."
+                        "description": "The URL containing Python script code to be executed."
                     },
                     "user_email": {
                         "type": "string",
@@ -15,7 +15,7 @@
                     }
                 },
                 "required": [
-                    "python_script",
+                    "python_script_url",
                     "user_email"
                 ],
                 "additionalProperties": false
@@ -390,6 +390,60 @@
         "B8.": {},
         "B9.": {},
         "B10.": {},
-        "A0.": {}
+        "A0.": {},
+        "EMAIL.": {
+            "name": "email_parser",
+            "strict": true,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "subject": {
+                        "type": "string",
+                        "description": "The subject line of the email."
+                    },
+                    "from": {
+                        "type": "string",
+                        "description": "The email address of the sender."
+                    },
+                    "to": {
+                        "type": "array",
+                        "description": "List of recipients the email is addressed to.",
+                        "items": {
+                            "type": "string",
+                            "description": "An email address of a recipient."
+                        }
+                    },
+                    "cc": {
+                        "type": "array",
+                        "description": "List of email addresses that received a copy of the email.",
+                        "items": {
+                            "type": "string",
+                            "description": "An email address in the CC field."
+                        }
+                    },
+                    "bcc": {
+                        "type": "array",
+                        "description": "List of email addresses that received a blind copy of the email.",
+                        "items": {
+                            "type": "string",
+                            "description": "An email address in the BCC field."
+                        }
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "The main content of the email."
+                    }
+                },
+                "required": [
+                    "subject",
+                    "from",
+                    "to",
+                    "cc",
+                    "bcc",
+                    "body"
+                ],
+                "additionalProperties": false
+            }
+        }
     }
 }
