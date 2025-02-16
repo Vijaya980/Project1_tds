@@ -1,0 +1,66 @@
+@@ -0,0 +1,80 @@
+Identify the user prompt that closely matches the tasks A1 to A10 or B3 to B10. If a match is found, output the task along with the parameter values in a JSON. If no task can be identified, or the information exceeds known parameters, output a generic JSON with `task_type` as "UNSEEN" and a confidence score. If applicable, provide a Python script to accomplish the task.
+# Tasks
+A1 - install_script : params (script_url, script_arg, additional_tools, output_dir)
+A2 - format_file : params (file_path, formatter_name, formatter_version, in_place)
+A3 - count_days : params (input_file, target_day, output_file, date_format)
+A4 - sort_json : params (input_file, sort_keys, output_file, validate_json)
+A5 - extract_log_lines : params (log_dir, line_count, output_file, timestamp_format)
+A6 - md_indexer : params (docs_dir, output_file, heading_level, clean_filename)
+A7 - extract_email : params (input_file, output_file, llm_instructions, validation_regex)
+A8 - ocr_extract : params (image_path, output_file, llm_instructions, output_format)
+A9 - semantic_similarity : params (input_file, output_file, model_name, similarity_threshold)
+A10 - sql_aggregate : params (db_path, table_name, query_condition, output_file)
+B3 - fetch_api_data : params (api_url, params, output_file, auth_token)
+B4 - git_ops : params (repo_url, commit_message, branch_name, file_patterns)
+B5 - db_query : params (db_path, sql_query, output_file, query_params)
+B6 - web_scrape : params (url, selector, output_file, pagination_limit)
+B7 - image_process : params (image_path, output_path, width, height, quality)
+B8 - audio_transcribe : params (audio_path, output_file, language, timestamps)
+B9 - md_conversion : params (input_file, output_file, style_template, toc_levels)
+B10 - csv_api : params (csv_path, filters, output_fields, api_endpoint)
+# Steps
+1. Review the user's prompt and tasks A1 to A10 or B3 to B10.
+2. Match the prompt with the task based on the parameters and task description.
+3. If a match is found, format the output as JSON reflecting the task and parameter values.
+4. If no match is found, format the output to cover all parameters with `task_type` "UNSEEN".
+5. Include a confidence score if task identification is uncertain.
+6. Provide a Python script if the task can be accomplished by a script.
+# Output Format
+1. Task JSON: Structured as per matching task parameters, or a generic format if "UNSEEN".
+2. Confidence Score: Included if the task identification is uncertain, using a range from 0 to 1.
+3. Python Script: If applicable for the identified task.
+# Example
+**Example Input:**
+```plaintext
+Please count the occurrences of Mondays in the data_file.txt and save the result into output.txt using the format YYYY-MM-DD.
+```
+**Example Output:**
+```json
+{
+  "task": "A3 - count_days",
+  "params": {
+    "input_file": "data_file.txt",
+    "target_day": "Monday",
+    "output_file": "output.txt",
+    "date_format": "YYYY-MM-DD"
+  }
+}
+```
+**Example Output (if task is unclear):**
+```json
+{
+  "task_type": "UNSEEN",
+  "params": {
+    "input_file": "N/A",
+    "target_day": "N/A",
+    "output_file": "N/A",
+    "date_format": "N/A"
+  },
+  "confidence_score": 0.5
+}
+```
+# Notes
+- Ensure JSON output follows the format outlined by the tasks.
+- Output a confidence score when necessary, indicating your uncertainty in task identification.
+- Include a Python script if the identified task benefits from or suggests a need for automation via scripting.

@@ -1,68 +1,46 @@
 import subprocess
 import json
 import os
-import numpy as np
-import pandas as pd
-from llm_helper import call_llm
+from llm_helper import call_llm, call_llm_prompt, parse_llm_output
 from utils import read_file, write_file, list_files
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+import logging
 
-def read_tasks(file_path: str) -> pd.DataFrame:
-    tasks = []
-    with open(file_path, "r", encoding="utf-8") as file:
-        for line in file:
-            tokens = line.strip().split(None, 1)
-            if len(tokens) < 2:
-                continue
-            task_type, description = tokens
-            tasks.append((task_type, description))
-    return pd.DataFrame(tasks, columns=["TaskType", "Description"])
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+system_message_for_classifier = read_file("task_classifier_system_message.txt")
 
-def get_top_similar_tasks(app: object, query: str):
-    data = read_tasks("tasks.txt")
-    query_embedding = app.state.model.encode([query])
-    similarity = cosine_similarity(app.state.embeddings, query_embedding).flatten()
-    most_similar = np.argsort(similarity)[-3:][::-1]
-    return data.iloc[most_similar].assign(Score=similarity[most_similar])
+def execute_task(task: str) -> str:
+    response = call_llm_prompt(task, system_message_for_classifier)
+    json_response, python_response = parse_llm_output(response)
+    
+    task_type = json_response["task"] #read first word of the response
+    first_task_type = task_type.split()[0] + "." #read first word of the response
 
-def execute_task(embeddings: object, task: str) -> str:
-    toptasks = get_top_similar_tasks(embeddings, task)
-    first_task_type = toptasks.iloc[0, 0]
-    print(first_task_type)
-    print(toptasks)
     with open('schema.json', 'r') as file:
         schema = json.load(file)
     """Parses and executes the given task."""
     match first_task_type:
         case "A1.":
             params = call_llm(task, schema["task_schema"]["A1."])
-            return params
-            #return install_uv_and_run_script(params)
+            return install_uv_and_run_script(params)
         case "A2.":
             params = call_llm(task, schema["task_schema"]["A2."])
-            return params
-            #return format_markdown(params)
+            return format_markdown(params)
         case "A3.":
             params = call_llm(task, schema["task_schema"]["A3."])
-            return params
-            #return count_wednesdays(params)
+            return count_days(params)
         case "A4.":
             params = call_llm(task, schema["task_schema"]["A4."])
-            return params
-            #return sort_contacts(params)
+            return sort_contacts(params)
         case "A5.":
             params = call_llm(task, schema["task_schema"]["A5."])
-            return params
-            #return process_logs(params)
+            return process_logs(params)
         case "A6.":
             params = call_llm(task, schema["task_schema"]["A6."])
-            return params
-            #return index_markdown_files(params)
+            return index_markdown_files(params)
         case "A7.":
             params = call_llm(task, schema["task_schema"]["A7."])
-            return params
-            #return extract_email(params)
+            return extract_email(params, schema["task_schema"]["EMAIL."])
         case "A8.":
             params = call_llm(task, schema["task_schema"]["A8."])
             return params
@@ -73,84 +51,125 @@ def execute_task(embeddings: object, task: str) -> str:
             #return find_similar_comments(params)
         case "A10.":
             params = call_llm(task, schema["task_schema"]["A10."])
-            return params
-            #return calculate_ticket_sales(params)
+            return execute_sql(params)
         case _:
             raise ValueError("Unsupported task description.")
 
 def install_uv_and_run_script(params: json) -> str:
+    logger.info("Installing uv and running script." + str(params))
     subprocess.run(["pip", "install", "uv"], check=True)
-    email = extract_argument(task)
-    script_url = "https://raw.githubusercontent.com/sanand0/tools-in-data-science-public/tds-2025-01/project-1/datagen.py"
-    subprocess.run(["python", "-m", "urllib.request", "", script_url, email], check=True)
+    subprocess.run(["pip", "install", "faker"], check=True)
+    logger.info("Installed uv and faker.")
+    email = params["user_email"]
+    script_url = params["python_script_url"]
+    # execute the remote script with the user email as an argument
+    try:
+        subprocess.run(
+            ["python", "-c", 
+            f"import urllib.request; urllib.request.urlretrieve('{script_url}', 'script.py'); "
+            f"import subprocess; subprocess.run(['python', 'script.py', '{email}'])"], 
+            check=True
+        )
+        logger.info("Script executed successfully.")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"An error occurred while executing the script: {e}")
+        raise e
     return "Data generation script executed successfully."
 
-def format_markdown(task: str) -> str:
-    query = (
-        "understand the task as described in the line below. \n"
-        + json.dumps(task)
-        + "\nNow you need to identify the filename of the markdown file that needs to be formatted. "
-        + "Output your answer as a json object with the key 'filename' and the value as the filename."
-    )
-    response = call_llm(query)
-    file_path = json.loads(response)["filename"]
-    subprocess.run(["npx", "prettier@3.4.2", "--write", file_path], check=True)
-    return "Markdown file formatted successfully."
+def format_markdown(params: json) -> str:
+    logger.info("Formatting Markdown file." + str(params))
+    input_file = params["input_file"]
+    format_tool = params["format_tool"]
+    subprocess.run(["npx", "install", "-g", format_tool], check=True)
+    subprocess.run([format_tool, "--write", input_file], check=True)
+    return "Formatted Markdown file successfully."
 
-def count_wednesdays(task: str) -> str:
+def count_days(params: json) -> str:
+    logger.info("Counting days." + str(params))
     from datetime import datetime
-    with open("/data/dates.txt", "r") as f:
-        dates = f.readlines()
-    count = sum(1 for date in dates if datetime.strptime(date.strip(), "%Y-%m-%d").weekday() == 2)
-    write_file("/data/dates-wednesdays.txt", str(count))
-    return "Counted Wednesdays successfully."
+    input_file = params["input_file"]
+    outout_file = params["output_file"]
+    day_of_week = params["day_of_week"] # e.g., "Wednesday"
+    dates_file_content = read_file(input_file)
+    resp = call_llm_prompt("Just answer a number. no explnations. Count the number of days in the file that are a " + day_of_week + "." + "\n" + dates_file_content)
+    write_file(outout_file, resp)
+    return "Counted Days successfully."
 
-def sort_contacts(task: str) -> str:
-    contacts = json.loads(read_file("/data/contacts.json"))
-    contacts.sort(key=lambda c: (c["last_name"], c["first_name"]))
-    write_file("/data/contacts-sorted.json", json.dumps(contacts, indent=2))
+def sort_contacts(params: json) -> str:
+    logger.info("Sorting contacts." + str(params))
+    input_file = params["input_file"]
+    outout_file = params["output_file"]
+    sorting_params_in_order_array = params["sorting_params_in_order_array"]
+
+    contacts = json.loads(read_file(input_file))
+    contacts.sort(key=lambda c: tuple(c[param] for param in sorting_params_in_order_array))
+    write_file(outout_file, json.dumps(contacts, indent=2))
     return "Contacts sorted successfully."
 
-def process_logs(task: str) -> str:
-    log_files = sorted(list_files("/data/logs/", ".log"), key=os.path.getmtime, reverse=True)[:10]
-    log_lines = [read_file(log).splitlines()[0] for log in log_files if read_file(log)]
-    write_file("/data/logs-recent.txt", "\n".join(log_lines))
+def process_logs(params: json) -> str:
+    logger.info("Processing logs." + str(params))
+    which_line_number = params["which_line_number"]
+    how_many_files = params["how_many_files"]
+    file_extension = params["file_extension"]
+    file_folder = params["file_folder"]
+    output_file = params["output_file"]
+    log_files = sorted(list_files(file_folder, file_extension), key=os.path.getmtime, reverse=True)[:how_many_files]
+    log_lines = [read_file(log).splitlines()[which_line_number] for log in log_files if read_file(log)]
+    write_file(output_file, "\n".join(log_lines))
     return "Processed log files successfully."
 
-def index_markdown_files(task: str) -> str:
-    md_files = list_files("/data/docs/", ".md")
+def index_markdown_files(params: json) -> str:
+    logger.info("Indexing Markdown files." + str(params))
+    md_files = list_files(params["input_folder"], params["file_type"])
     index = {}
     for md_file in md_files:
         lines = read_file(md_file).splitlines()
         title = next((line[2:] for line in lines if line.startswith("# ")), "Untitled")
         index[os.path.basename(md_file)] = title
-    write_file("/data/docs/index.json", json.dumps(index, indent=2))
+    write_file(params["output_file"], json.dumps(index, indent=2))
     return "Markdown index created successfully."
 
-def extract_email(task: str) -> str:
-    content = read_file("/data/email.txt")
-    email = call_llm("Extract sender's email from this text:", content)
-    write_file("/data/email-sender.txt", email)
-    return "Extracted sender's email successfully."
+def extract_email(params: json, schema: json) -> str:
+    logger.info("Extracting email." + str(params))
+    content = read_file(params["input_file"])
+    isSender = params["is_sender"]
+    isReceiver = params["is_receiver"]
+    isCC = params["is_cc"]
+    isBCC = params["is_bcc"]
+    isTo = params["is_to"]
 
-def extract_credit_card(task: str) -> str:
+    parsed_email_json = call_llm(content, schema)
+    response = ""
+    if isSender: response += str(parsed_email_json.get("from", ""))
+    elif isReceiver: response += str(parsed_email_json.get("to", ""))
+    elif isCC: response += str(parsed_email_json.get("cc", ""))
+    elif isBCC: response += str(parsed_email_json.get("bcc", ""))
+    elif isTo: response += str(parsed_email_json.get("to", ""))
+
+    write_file(params["output_file"], response)
+    return "Extracted email successfully."
+
+def extract_credit_card(params: json) -> str:
+    logger.info("Extracting credit card." + str(params))
     card_text = call_llm("Extract credit card number from this image:", image_path="/data/credit-card.png")
     write_file("/data/credit-card.txt", card_text.replace(" ", ""))
     return "Extracted credit card number successfully."
 
-def find_similar_comments(task: str) -> str:
+def find_similar_comments(params: json) -> str:
+    logger.info("Finding similar comments." + str(params))
     comments = read_file("/data/comments.txt").splitlines()
     most_similar = call_llm("Find the most similar pair of comments:", comments)
     write_file("/data/comments-similar.txt", "\n".join(most_similar))
     return "Identified similar comments successfully."
 
-def calculate_ticket_sales(task: str) -> str:
+def execute_sql(params: json) -> str:
     import sqlite3
-    conn = sqlite3.connect("/data/ticket-sales.db")
+    logger.info("Executing SQL." + str(params))
+    conn = sqlite3.connect(params["db_file"])
     cursor = conn.cursor()
-    cursor.execute("SELECT SUM(units * price) FROM tickets WHERE type = 'Gold'")
+    cursor.execute(params["sql_query"])
     total_sales = cursor.fetchone()[0] or 0
-    write_file("/data/ticket-sales-gold.txt", str(total_sales))
+    write_file(params["output_file"], str(total_sales))
     conn.close()
     return "Calculated total sales for 'Gold' ticket type successfully."
 

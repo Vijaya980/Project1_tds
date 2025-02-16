@@ -21,16 +21,20 @@
 
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
 from utils import read_file, write_file, list_files
-from agent import execute_task, read_tasks
-from contextlib import asynccontextmanager
-from sentence_transformers import SentenceTransformer
+from agent import execute_task
+import logging
+#from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+
+
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-app = FastAPI
+app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -40,33 +44,35 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+# ✅ Define request model for /v1/completions
+class CompletionRequest(BaseModel):
+    prompt: str
+    max_tokens: int
+    
+    
+@app.post("/v1/completions")
+async def completions(request: CompletionRequest):
+    """Simulated LLM completion API"""
     try:
-        app.state.model = SentenceTransformer(
-            'Alibaba-NLP/gte-large-en-v1.5',
-            trust_remote_code=True,
-            cache_folder='./model_cache'  # adjust path if needed
-        )
-        logger.info("Model loaded successfully.")
-        data = read_tasks("tasks.txt")
-        app.state.embeddings = app.state.model.encode(data['Description'].tolist())
+        # Dummy response for now
+        response_text = f"Generated text based on: {request.prompt}"
+        return {"status": "success", "response": response_text}
     except Exception as e:
-        logger.error(f"Error loading model: {e}")
-        raise e
-    yield
-    logger.info("Shutting down app.")
+        logger.error(f"Error processing completion request: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
-app = FastAPI(lifespan=lifespan)
+
 
 @app.post("/run")
 async def run_task(task: str = Query(..., description="Task description in plain English")):
     try:
-        result = execute_task(app, task)
+        result = execute_task(task)
         return {"status": "success", "output": result}
     except ValueError as e:
+        logger.error(f"Error executing task: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Error executing task: {e}")
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
 @app.get("/read")
