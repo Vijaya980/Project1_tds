@@ -1,39 +1,32 @@
-# Use an official Python base image
-FROM python:3.12-slim-bookworm
+# Use official Python base image
+FROM python:3.12.8-slim
 
-# Set the working directory inside the container
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    NODE_VERSION=18
+
+# Install system dependencies & Node.js (for npm & Prettier)
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g prettier@3.4.2 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PyTorch without CUDA support. Should remove for production or machines which do have CUDA support.
+ENV CUDA_HOME=""
+ENV TORCH_CUDA_ARCH_LIST=""
+ENV NVIDIA_VISIBLE_DEVICES=""
+
+# Copy Python requirements and install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Set working directory
 WORKDIR /app
 
-# Install necessary system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+# Copy project files
+COPY . .
 
-# Download the latest installer for `uv`
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
-
-# Install `uv` (already included in the installer, but keeping this just in case)
-RUN pip install uv 
-
-# Copy the requirements file first (optimizing build caching)
-COPY requirements.txt /app/requirements.txt
-
-# Install dependencies using `uv` inside the system environment
-RUN uv pip install --system -r /app/requirements.txt
-
-# Copy only necessary files into the container
-COPY main2.py /app/main2.py
-COPY . /app
-
-# Create a directory for data
-RUN mkdir -p /data
-
-# Expose port 8000
-EXPOSE 8000
-
-# Command to start the app
-CMD ["uv", "run", "main2.py"]
-
-
-
-
-
+# Run the Python script (adjust as needed)
+CMD ["python", "main.py"]
